@@ -1,0 +1,13 @@
+﻿/////////////////////////////////////////////////////////////////////////////
+/// Name:        resource.rc
+/// Purpose:     (Win rc)
+/// Author:      Joson Williams
+/// Created:     February 5, 2026
+/// Copyright:   (c) 2024-2026 JOSON
+/// Licence:     GNU GENERAL PUBLIC LICENSE v3
+/////////////////////////////////////////////////////////////////////////////
+
+#include "resource.h"
+
+0x01 RCDATA "Fonts/MiSans_Normal.otf"
+0x02 RCDATA "Fonts/MiSans_Semibold.otf"

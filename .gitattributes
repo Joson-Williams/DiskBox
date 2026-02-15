@@ -1,0 +1,2 @@
+resources/Fonts/MiSans_Normal.otf filter=lfs diff=lfs merge=lfs -text
+resources/Fonts/MiSans_Semibold.otf filter=lfs diff=lfs merge=lfs -text
