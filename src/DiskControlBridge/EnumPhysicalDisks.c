@@ -25,7 +25,7 @@
  * 动态分配的 `PhysicalDiskInfo` 结构体数组中。
  *
  * @param[out] ppDiskArray 指向 `PhysicalDiskInfo` 结构体数组指针的指针。
- *                     成功时，此函数会将 `*ppDisks` 设置为指向新分配的数组。
+ *                     成功时，此函数会将 `*ppDiskArray` 设置为指向新分配的数组。
  *                     调用者在使用完毕后必须通过 `free()` 释放此数组。
  * @param[out] pdwDiskCount 指向一个 `DWORD` 类型变量的指针。
  *                         成功时，此函数会将 `*pdwDiskCount` 设置为实际找到并成功处理的磁盘数量。
@@ -46,36 +46,36 @@ int EnumeratePhysicalDisks(PhysicalDiskInfo** ppDiskArray, PDWORD pdwDiskCount) 
     }
 
     // 初始化输出参数，避免野指针
-    *ppDiskArray = NULL;
+    *ppDiskArray  = NULL;
     *pdwDiskCount = 0;
 
-    HDEVINFO hDevInfo = INVALID_HANDLE_VALUE;
-    SP_DEVICE_INTERFACE_DATA devInterfaceData = {.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA)};
+    HDEVINFO hDevInfo                                  = INVALID_HANDLE_VALUE;
+    SP_DEVICE_INTERFACE_DATA devInterfaceData          = {.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA)};
     PSP_DEVICE_INTERFACE_DETAIL_DATA_W pDevDetailDataW = NULL;
-    DWORD dwIndex = 0, dwValidIndex = 0;
-    DWORD dwRequiredSize = 0;
-    DWORD dwError = ERROR_SUCCESS;
-    DWORD dwDiskCount = 0;
-    PhysicalDiskInfo* pDisks = NULL;
-    int RetVal = ENUM_PHYSICAL_DISKS_SUCCESS;
+    DWORD dwIndex                                      = 0, dwValidIndex = 0;
+    DWORD dwRequiredSize                               = 0;
+    DWORD dwError                                      = ERROR_SUCCESS;
+    DWORD dwDiskCount                                  = 0;
+    PhysicalDiskInfo* pDisks                           = NULL;
+    int RetVal                                         = ENUM_PHYSICAL_DISKS_SUCCESS;
 
     // 获取设备信息集：前置失败处理，减少缩进
     hDevInfo = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_DISK, NULL, NULL,
                                     DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
     if (hDevInfo == INVALID_HANDLE_VALUE) {
         RetVal = ENUM_PHYSICAL_DISKS_ERROR_GET_DISK_COUNT;
-        goto cleanup;  // 统一通过cleanup处理，逻辑更一致
+        goto cleanup; // 统一通过cleanup处理
     }
 
-    // 第一次遍历计数：严格检查错误，避免无效计数
+    // 第一次遍历计数
     while (TRUE) {
-        BOOL bResult = SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &GUID_DEVINTERFACE_DISK,
-                                                   dwIndex, &devInterfaceData);
+        const BOOL bResult = SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &GUID_DEVINTERFACE_DISK,
+                                                         dwIndex, &devInterfaceData);
         // 前置失败处理
         if (!bResult) {
             dwError = GetLastError();
             if (dwError == ERROR_NO_MORE_ITEMS) {
-                break;  // 正常结束遍历
+                break; // 正常结束遍历
             } else {
                 RetVal = ENUM_PHYSICAL_DISKS_ERROR_GET_DISK_COUNT;
                 goto cleanup;
@@ -98,18 +98,18 @@ int EnumeratePhysicalDisks(PhysicalDiskInfo** ppDiskArray, PDWORD pdwDiskCount) 
         goto cleanup;
     }
 
-    // 第二次遍历获取详细信息：修复循环条件，避免无限循环
-    dwIndex = 0;
+    // 第二次遍历获取详细信息
+    dwIndex      = 0;
     dwValidIndex = 0;
     while (TRUE) {
         // 先检查是否遍历完所有设备
-        BOOL bEnumResult = SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &GUID_DEVINTERFACE_DISK,
-                                                      dwIndex, &devInterfaceData);
+        const BOOL bEnumResult = SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &GUID_DEVINTERFACE_DISK,
+                                                             dwIndex, &devInterfaceData);
         // 前置枚举失败处理
         if (!bEnumResult) {
             dwError = GetLastError();
             if (dwError == ERROR_NO_MORE_ITEMS) {
-                break;  // 正常结束遍历
+                break; // 正常结束遍历
             } else {
                 dwIndex++;
                 continue;
@@ -117,13 +117,14 @@ int EnumeratePhysicalDisks(PhysicalDiskInfo** ppDiskArray, PDWORD pdwDiskCount) 
         }
 
         // 获取所需缓冲区大小
-        BOOL bDetailResult = SetupDiGetDeviceInterfaceDetailW(hDevInfo, &devInterfaceData, NULL, 0,
-                                                             &dwRequiredSize, NULL);
+        const BOOL bDetailResult = SetupDiGetDeviceInterfaceDetailW(hDevInfo, &devInterfaceData, NULL, 0,
+                                                                    &dwRequiredSize, NULL);
         dwError = GetLastError();
         // 前置缓冲区大小无效处理
-        if (bDetailResult || dwError != ERROR_INSUFFICIENT_BUFFER || dwRequiredSize == 0 || dwRequiredSize > MAX_BUFFER_SIZE) {
+        if (bDetailResult || dwError != ERROR_INSUFFICIENT_BUFFER || dwRequiredSize == 0 || dwRequiredSize >
+            MAX_BUFFER_SIZE) {
             dwIndex++;
-            continue;  // 缓冲区大小无效，跳过该设备
+            continue; // 缓冲区大小无效，跳过该设备
         }
 
         // 分配缓冲区：前置分配失败处理
@@ -145,28 +146,28 @@ int EnumeratePhysicalDisks(PhysicalDiskInfo** ppDiskArray, PDWORD pdwDiskCount) 
         }
 
         // 打开设备
-        HANDLE hDevice = CreateFileW(pDevDetailDataW->DevicePath,
-                                     GENERIC_READ,
-                                     FILE_SHARE_READ | FILE_SHARE_WRITE,
-                                     NULL,
-                                     OPEN_EXISTING,
-                                     FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING,
-                                     NULL);
+        const HANDLE hDevice = CreateFileW(pDevDetailDataW->DevicePath,
+                                           GENERIC_READ,
+                                           FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                           NULL,
+                                           OPEN_EXISTING,
+                                           FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING,
+                                           NULL);
 
         // 安全转换设备路径
         size_t convertedChars = 0;
-        errno_t err = wcstombs_s(&convertedChars,
-                                  pDisks[dwValidIndex].devicePath,
-                                  sizeof(pDisks[dwValidIndex].devicePath),  // 使用结构体实际长度，更安全
-                                  pDevDetailDataW->DevicePath,
-                                  _TRUNCATE);
+        const errno_t err     = wcstombs_s(&convertedChars,
+                                           pDisks[dwValidIndex].devicePath,
+                                           sizeof(pDisks[dwValidIndex].devicePath), // 使用结构体实际长度，更安全
+                                           pDevDetailDataW->DevicePath,
+                                           _TRUNCATE);
         if (err != 0) {
             pDisks[dwValidIndex].devicePath[0] = '\0';
         }
 
         // 初始化设备属性默认值
-        pDisks[dwValidIndex].hDevice = INVALID_HANDLE_VALUE;
-        pDisks[dwValidIndex].pDescriptor = NULL;
+        pDisks[dwValidIndex].hDevice        = INVALID_HANDLE_VALUE;
+        pDisks[dwValidIndex].pDescriptor    = NULL;
         pDisks[dwValidIndex].dwPropertySize = 0;
 
         // 设备句柄有效时才处理属性
@@ -181,14 +182,15 @@ int EnumeratePhysicalDisks(PhysicalDiskInfo** ppDiskArray, PDWORD pdwDiskCount) 
 
             DWORD dwBytesReturned = 0;
             // 第一次调用获取大小
-            BOOL bIoResult = DeviceIoControl(hDevice, IOCTL_STORAGE_QUERY_PROPERTY,
-                                           &query, sizeof(query),
-                                           NULL, 0,
-                                           &dwBytesReturned, NULL);
+            const BOOL bIoResult = DeviceIoControl(hDevice, IOCTL_STORAGE_QUERY_PROPERTY,
+                                                   &query, sizeof(query),
+                                                   NULL, 0,
+                                                   &dwBytesReturned, NULL);
             dwError = GetLastError();
 
             // 前置大小获取失败/无效处理
-            if (bIoResult || dwError != ERROR_INSUFFICIENT_BUFFER || dwBytesReturned == 0 || dwBytesReturned > MAX_BUFFER_SIZE) {
+            if (bIoResult || dwError != ERROR_INSUFFICIENT_BUFFER || dwBytesReturned == 0 || dwBytesReturned >
+                MAX_BUFFER_SIZE) {
                 free(pDevDetailDataW);
                 pDevDetailDataW = NULL;
                 dwIndex++;
@@ -210,15 +212,15 @@ int EnumeratePhysicalDisks(PhysicalDiskInfo** ppDiskArray, PDWORD pdwDiskCount) 
             }
 
             // 第二次调用获取属性
-            BOOL bPropResult = DeviceIoControl(hDevice, IOCTL_STORAGE_QUERY_PROPERTY,
-                                             &query, sizeof(query),
-                                             pDisks[dwValidIndex].pDescriptor,
-                                             dwBytesReturned,
-                                             &dwBytesReturned, NULL);
+            const BOOL bPropResult = DeviceIoControl(hDevice, IOCTL_STORAGE_QUERY_PROPERTY,
+                                                     &query, sizeof(query),
+                                                     pDisks[dwValidIndex].pDescriptor,
+                                                     dwBytesReturned,
+                                                     &dwBytesReturned, NULL);
             // 前置属性获取失败处理
             if (!bPropResult) {
                 free(pDisks[dwValidIndex].pDescriptor);
-                pDisks[dwValidIndex].pDescriptor = NULL;
+                pDisks[dwValidIndex].pDescriptor    = NULL;
                 pDisks[dwValidIndex].dwPropertySize = 0;
             } else {
                 pDisks[dwValidIndex].dwPropertySize = dwBytesReturned;
@@ -240,8 +242,8 @@ int EnumeratePhysicalDisks(PhysicalDiskInfo** ppDiskArray, PDWORD pdwDiskCount) 
 
     // 更新输出参数：确保只有成功时才赋值
     *pdwDiskCount = dwValidIndex;
-    *ppDiskArray = pDisks;
-    RetVal = ENUM_PHYSICAL_DISKS_SUCCESS;
+    *ppDiskArray  = pDisks;
+    RetVal        = ENUM_PHYSICAL_DISKS_SUCCESS;
 
 cleanup:
     // 释放临时缓冲区（防止泄漏）
@@ -273,7 +275,7 @@ cleanup:
             pDisks = NULL;
         }
         // 重置输出参数
-        *ppDiskArray = NULL;
+        *ppDiskArray  = NULL;
         *pdwDiskCount = 0;
     }
 

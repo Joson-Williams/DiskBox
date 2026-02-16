@@ -29,8 +29,8 @@
  * @param[in] bufferSize pSectorBuffer 指向的缓冲区的大小。
  * @return 成功时返回 READ_DISK_SECTOR_SUCCESS，否则返回定义的错误代码之一。
  */
-int ReadDiskSector(const char* diskPath,
-                   long long sectorIndex,
+unsigned int ReadDiskSector(const char* diskPath,
+                   unsigned long long sectorIndex,
                    unsigned int* pSectorSize,
                    uint8_t* pSectorBuffer,
                    size_t bufferSize);

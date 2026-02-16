@@ -32,8 +32,7 @@ nmake -f makefile.vc BUILD=release TARGET_CPU=AMD64 SHARED=0 UNICODE=1 USE_RUNTI
 ```
 
 4. 搭建依赖</br>
-- 如果构建正确，应当会在`lib`目录下生成`vc_x64_lib`文件夹，其大小约为1.24 GB
-，将其内容复制到`DiskBox/libs/wxWidgets/lib/vc_x64_lib`下。
+- 如果构建正确，应当会在`lib`目录下生成`vc_x64_lib`文件夹，其大小约为1.24 GB，将其内容复制到`DiskBox/libs/wxWidgets/lib/vc_x64_lib`下。
 - 将压缩包里的`include`文件夹内容复制到`DiskBox/libs/wxWidgets/lib/include/`下。
 
 5. 加载 CMake 项目，执行`DiskBox`构建。

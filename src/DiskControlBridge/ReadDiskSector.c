@@ -16,13 +16,13 @@
 #include "ReadDiskSector.h"
 #include "DCB_ErrorDefinitions.h"
 
-int ReadDiskSector(const char* diskPath,
-                   const long long sectorIndex,
+unsigned int ReadDiskSector(const char* diskPath,
+                   const unsigned long long sectorIndex,
                    unsigned int* pSectorSize,
                    uint8_t* pSectorBuffer,
                    const size_t bufferSize) {
     HANDLE hDisk  = INVALID_HANDLE_VALUE;
-    int errorCode = READ_DISK_SECTOR_SUCCESS; // 初始假设成功
+    unsigned int errorCode = READ_DISK_SECTOR_SUCCESS; // 初始假设成功
 
     // 验证输入参数
     if (!diskPath || !pSectorSize || !pSectorBuffer || sectorIndex < 0) {
