@@ -13,8 +13,10 @@ add_executable(DiskControlBridge
         ReadDiskSector.h
         EnumPhysicalDisks.c
         EnumPhysicalDisks.h
-        DCB_ErrorDefinitions.h
-        test.cpp
+        ErrorDefinitions.h
+        ParseGPTTable.cpp
+        GetTableType.cpp
+        GetTableType.h
 )
 
 target_link_libraries(DiskControlBridge PRIVATE setupapi.lib)

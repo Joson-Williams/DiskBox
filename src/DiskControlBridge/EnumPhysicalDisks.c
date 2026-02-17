@@ -8,7 +8,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "EnumPhysicalDisks.h"
-#include "DCB_ErrorDefinitions.h"
+#include "ErrorDefinitions.h"
 
 #include <windows.h>
 #include <setupapi.h>
@@ -40,7 +40,7 @@
  *   `pdwDiskCount` 反映的是成功处理（即成功打开并至少尝试获取属性）的磁盘数量。
  */
 int EnumeratePhysicalDisks(PhysicalDiskInfo** ppDiskArray, PDWORD pdwDiskCount) {
-    // 入参合法性检查（关键！原代码未检查空指针）
+    // 入参合法性检查
     if (ppDiskArray == NULL || pdwDiskCount == NULL) {
         return ENUM_PHYSICAL_DISKS_ERROR_INVALID_PARAMETER;
     }

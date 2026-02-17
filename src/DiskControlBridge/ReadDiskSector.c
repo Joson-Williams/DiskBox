@@ -8,21 +8,20 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include <windows.h>
-#include <winioctl.h> // 用于 IOCTL_DISK_GET_DRIVE_GEOMETRY_EX
 #include <stdio.h>
 #include <stdlib.h> // 用于 malloc, free
 #include <stdint.h>
 #include <string.h>
 #include "ReadDiskSector.h"
-#include "DCB_ErrorDefinitions.h"
+#include "ErrorDefinitions.h"
 
-unsigned int ReadDiskSector(const char* diskPath,
-                   const unsigned long long sectorIndex,
-                   unsigned int* pSectorSize,
-                   uint8_t* pSectorBuffer,
-                   const size_t bufferSize) {
+int ReadDiskSector(const char* diskPath,
+                            const unsigned long long sectorIndex,
+                            unsigned int* pSectorSize,
+                            uint8_t* pSectorBuffer,
+                            const size_t bufferSize) {
     HANDLE hDisk  = INVALID_HANDLE_VALUE;
-    unsigned int errorCode = READ_DISK_SECTOR_SUCCESS; // 初始假设成功
+    int errorCode = READ_DISK_SECTOR_SUCCESS; // 初始假设成功
 
     // 验证输入参数
     if (!diskPath || !pSectorSize || !pSectorBuffer || sectorIndex < 0) {
